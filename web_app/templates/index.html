@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>微博用户内容管理</title>
+  <link rel="stylesheet" href="/static/layui/css/layui.css">
+  <script src="/static/layui/layui.all.js"></script>
+  <script src="/static/js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+    <table id = "table" class="layui-table">
+        <colgroup>
+          <col width="150">
+          <col width="200">
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>微博昵称</th>
+            <th>性别</th>
+            <th>所在城市</th>
+            <th>粉丝数量</th>
+            <th>关注数量</th>
+            <th>已发微博数量</th>
+          </tr> 
+        </thead>
+        <tbody id="tbody">
+        </tbody>
+      </table>
+      <div id="test1"></div>
+  <script>
+  layui.use('laypage', function(){
+    var laypage = layui.laypage;
+    var pages_num = doAjax(1,10)
+    //执行一个laypage实例
+    laypage.render({
+      elem: 'test1',
+      limit:10,
+      count: pages_num,
+      jump: function(obj, first){
+        //首次不执行
+        if(!first){
+          //do something
+        }else{
+          doAjax(obj.limit,obj.curr);
+        }
+      }
+    });
+  });
+  function doAjax(pagtor,page){
+    var pages_num = 1;
+    $.ajax({
+      url:"/api/Information/",
+      type:"POST",
+      data:{'pagtor':pagtor,'page':page},
+      dataType:"text",
+      success:function(result){
+        var data = $.parseJSON(result)
+        if (data["ret_cd"] == 200){
+          // 先清空
+          $("#tbody").html("");
+          // 数量
+          //pages_num = data["pages_num"];
+          var appendHtml = "";
+          var list = data["successResult"];
+          for(var i = 0;i < list.length;i++){
+            var info = list[i];
+            var trData = "<tr>"+
+              "<td>"+info["nickname"]+"</td>"+
+              "<td>"+info["gender"]+"</td>"+
+              "<td>"+info["city"]+"</td>"+
+              "<td>"+info["num_fans"]+"</td>"+
+              "<td>"+info["num_follows"]+"</td>"+
+              "<td>"+info["num_tweets"]+"</td>"+
+              "</tr>";
+              appendHtml += trData;
+            }
+          $("#tbody").html(appendHtml);
+        }
+      }
+    });
+    return pages_num;
+  }
+</script>
+</body>
+</html>

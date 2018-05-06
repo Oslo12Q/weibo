@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>微博内容管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/layui/layui.all.js"></script>
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+<input type="text" id="nickname" name="nickname" placeholder="请输入昵称" autocomplete="off" class="layui-input">
+<table class="layui-table">
+  <colgroup>
+    <col width="150">
+    <col width="200">
+    <col>
+  </colgroup>
+  <thead>
+    <tr>
+      <th>微博内容</th>
+      <th>微博昵称</th>
+      <th>微博被评论数</th>
+      <th>微博被点赞的数量</th>
+      <th>微博发表时间</th>
+      <th>微博被转发的数量</th>
+    </tr> 
+  </thead>
+  <tbody id="tbody">
+  </tbody>
+</table>
+
+<div id="test1"></div>
+  <script>
+  layui.use('laypage', function(){
+    var laypage = layui.laypage;
+    var nickname = "";
+    var pages_num = doAjax(1,10,nickname);
+    //执行一个laypage实例
+    laypage.render({
+      elem: 'test1',
+      limit:10,
+      count: pages_num,
+      jump: function(obj,first){
+        //首次不执行
+        if(!first){
+          //do something
+        }else{
+            nickname = $("#nickname").val();
+            doAjax(obj.limit,obj.curr,nickname);
+        }
+      }
+    });
+  });
+
+  function doAjax(pagtor,page,nickname){
+    var pages_num = 1;
+    $.ajax({
+      url:"/api/Tweets/",
+      type:"POST",
+      data:{'pagtor':pagtor,'page':page},
+      dataType:"text",
+      success:function(result){
+        var data = $.parseJSON(result)
+        if (data["ret_cd"] == 200){
+          // 先清空
+          $("#tbody").html("");
+          // 数量
+          pages_num = data["pages_num"];
+          var appendHtml = "";
+          var list = data["successResult"];
+          for(var i = 0;i < list.length;i++){
+            var info = list[i];
+            var trData = "<tr>"+
+              "<td>"+info["content"]+"</td>"+
+              "<td>"+info["nickname"]+"</td>"+
+              "<td>"+info["comment"]+"</td>"+
+              "<td>"+info["like"]+"</td>"+
+              "<td>"+info["pubtime"]+"</td>"+
+              "<td>"+info["transfer"]+"</td>"+
+              "</tr>";
+                appendHtml += trData;
+            }
+          $("#tbody").html(appendHtml);
+        }
+      }
+    });
+    return pages_num;
+  }
+</script>
+</body>
+</html>
